@@ -33,8 +33,7 @@ namespace ContainerConfig
 
         private static void SetApplyColor(Color c)
         {
-            MenuButton button = MenuRef.Find("Apply") as MenuButton;
-            button.gameObject.transform.Find("Label").GetComponent<Text>().color = c;
+            MenuRef.Find("Apply").gameObject.transform.Find("Label").GetComponent<Text>().color = c;
         }
 
         private static void HideCustomizationElements()
