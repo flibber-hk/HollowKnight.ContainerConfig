@@ -72,6 +72,8 @@ namespace ContainerConfig
             string originalChoice,
             string newChoice)
         {
+            ItemChangerMod.Modules.GetOrAdd<ModifiedPlacementCache>().ModifiedPlacements.Add((pmt as AbstractPlacement).Name);
+
             if (items.Count <= 1 && !GS.AffectSingleLocations)
             {
                 return originalChoice;

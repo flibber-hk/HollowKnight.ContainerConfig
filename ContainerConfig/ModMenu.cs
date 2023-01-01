@@ -8,6 +8,8 @@ namespace ContainerConfig
     {
         private static GlobalSettings GS => ContainerConfigMod.GS;
 
+        public static event Action RecalculateClicked;
+
         private static Menu MenuRef;
 
         private static readonly string[] ContainerOptions = new[]
@@ -48,7 +50,11 @@ namespace ContainerConfig
                     n => GS.ReplacementSelectorOption = (GlobalSettings.ReplacementSelectorOptions)n,
                     () => (int)GS.ReplacementSelectorOption
                     ),
-                new TextPanel("Changes made here may not apply to existing save files"),
+                new MenuButton(
+                    "Apply",
+                    "Click to apply to the current save",
+                    _ => RecalculateClicked?.Invoke()
+                    )
             });
 
             return MenuRef.GetMenuScreen(modListMenu);
