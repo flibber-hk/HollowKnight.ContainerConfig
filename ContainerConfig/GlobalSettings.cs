@@ -3,7 +3,7 @@ using Newtonsoft.Json.Converters;
 
 namespace ContainerConfig
 {
-    public class GlobalSettings
+    public record GlobalSettings
     {
         /// <summary>
         /// Force locations to have this container where possible.
@@ -13,7 +13,7 @@ namespace ContainerConfig
         /// <summary>
         /// If false, only apply to locations with more than one item.
         /// </summary>
-        public bool AffectSingleLocations = false;
+        public bool AffectSingleLocations { get; set; } = false;
 
         public enum ReplacementSelectorOptions
         {
@@ -34,6 +34,6 @@ namespace ContainerConfig
         /// <summary>
         /// Used to decide whether to replace.
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))] public ReplacementSelectorOptions ReplacementSelectorOption;
+        [JsonConverter(typeof(StringEnumConverter))] public ReplacementSelectorOptions ReplacementSelectorOption { get; set; }
     }
 }
