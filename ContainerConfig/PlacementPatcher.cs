@@ -1,7 +1,12 @@
-﻿using ItemChanger;
+﻿using ContainerConfig.IC;
+using ItemChanger;
+using ItemChanger.Locations;
 using ItemChanger.Placements;
-using ItemChanger.Tags;
+using MonoMod.RuntimeDetour;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace ContainerConfig
 {
@@ -9,125 +14,101 @@ namespace ContainerConfig
     {
         private static GlobalSettings GS => ContainerConfigMod.GS;
 
-        public static void ConfigurePlacements()
-        {
-            if (GS.DefaultContainerType == Container.Unknown) return;
+        private static readonly Modding.ILogger _logger = new Modding.SimpleLogger("ContainerConfig.PlacementPatcher");
 
-            foreach (AbstractPlacement pmt in ItemChanger.Internal.Ref.Settings.GetPlacements())
-            {
-                PatchPlacement(pmt);
-            }
+        private static readonly MethodInfo _mutablePlacementMi = typeof(MutablePlacement).GetMethod(nameof(MutablePlacement.ChooseContainerType));
+        private static Hook _mutablePlacementHook;
+        private static readonly MethodInfo _ecpMi = typeof(ExistingContainerPlacement).GetMethod(nameof(ExistingContainerPlacement.ChooseContainerType));
+        private static Hook _existingContainerPlacementHook;
+
+        internal static void Hook()
+        {
+            _mutablePlacementHook = new(_mutablePlacementMi, MutablePlacementChoose);
+            _existingContainerPlacementHook = new(_ecpMi, EcpChoose);
         }
 
-        public static void PatchPlacement(AbstractPlacement pmt)
+        private static string MutablePlacementChoose(
+            Func<ISingleCostPlacement, ContainerLocation, IEnumerable<AbstractItem>, string> orig,
+            ISingleCostPlacement pmt,
+            ContainerLocation loc,
+            IEnumerable<AbstractItem> items)
         {
-            if (pmt.Items.Count == 0) return;
+            List<AbstractItem> itemsList = new(items);
 
-            if (pmt is ISingleCostPlacement scpmt && scpmt.Cost != null)
-            {
-                // Has a cost, so will be a shiny. No need to do anything
-                return;
-            }
+            string originalChoice = orig(pmt, loc, itemsList);
+            string newChoice = orig(pmt, loc, itemsList.Prepend(EmptyItem.Create(GS.DefaultContainerType)));
 
-            string currentContainer;
-
-            if (pmt is MutablePlacement mpmt)
-            {
-                if (mpmt.Location.forceShiny)
-                {
-                    // Force shiny, so no need to do anything
-                    return;
-                }
-
-                currentContainer = MutablePlacement.ChooseContainerType(mpmt, mpmt.Location, mpmt.Items);
-            }
-            else if (pmt is ExistingContainerPlacement epmt)
-            {
-                if (epmt.Location.nonreplaceable)
-                {
-                    // Nonreplaceable, so no need to do anything
-                    return;
-                }
-
-                currentContainer = ExistingContainerPlacement.ChooseContainerType(epmt, epmt.Location, epmt.Items);
-            }
-            else
-            {
-                // Not a patchable placement type
-                return;
-            }
-
-            if (currentContainer == GS.DefaultContainerType)
-            {
-                // No need to change the container type because it's already what we want
-                return;
-            }
-
-            if (!ShouldModify(pmt, currentContainer)) return;
-
-            DoModify(pmt, GS.DefaultContainerType);
+            return GlobalChoose(pmt, loc, itemsList, originalChoice, newChoice);
         }
 
+        private static string EcpChoose(
+            Func<ISingleCostPlacement, ExistingContainerLocation, IEnumerable<AbstractItem>, string> orig,
+            ISingleCostPlacement pmt,
+            ExistingContainerLocation loc,
+            IEnumerable<AbstractItem> items)
+        {
+            List<AbstractItem> itemsList = new(items);
+
+            string originalChoice = orig(pmt, loc, itemsList);
+            string newChoice = orig(pmt, loc, itemsList.Prepend(EmptyItem.Create(GS.DefaultContainerType)));
+
+            return GlobalChoose(pmt, loc, itemsList, originalChoice, newChoice);
+        }
 
         /// <summary>
-        /// Modifies the current placement to ensure that the container is the container type.
-        /// It can be assumed that <paramref name="containerType"/> is not null or Unknown.
+        /// Choose a container type based on the global settings.
         /// </summary>
-        public static void DoModify(AbstractPlacement pmt, string containerType)
+        /// <param name="pmt">The placement.</param>
+        /// <param name="loc">The location. This will either be a ContainerLocation or an ExistingContainerLocation.</param>
+        /// <param name="items">The items at the placement.</param>
+        /// <param name="originalChoice">The container type selected by ItemChanger.</param>
+        /// <param name="newChoice">The container that would appear if an item
+        /// requesting the container from the global settings were prepended.</param>
+        /// <returns>The container that should appear.</returns>
+        private static string GlobalChoose(
+            ISingleCostPlacement pmt,
+            AbstractLocation loc,
+            List<AbstractItem> items,
+            string originalChoice,
+            string newChoice)
         {
-            // Exclude chests specifically, because they're handled specially by IC.
-            if (containerType != Container.Chest)
+            if (items.Count <= 1 && !GS.AffectSingleLocations)
             {
-                pmt.AddTag<UnsupportedContainerTag>().containerType = Container.Chest;
+                return originalChoice;
             }
 
-            if (containerType == Container.Shiny && pmt is MutablePlacement mpmt)
+            if (newChoice != GS.DefaultContainerType)
             {
-                mpmt.Location.forceShiny = true;
-            }
-            else
-            {
-                pmt.Items.Insert(0, IC.EmptyItem.Create(containerType));
-            }
-        }
-
-
-
-        /// <summary>
-        /// Checks the global settings to see if the placement is a candidate for modification
-        /// </summary>
-        public static bool ShouldModify(AbstractPlacement pmt, string currentContainer)
-        {
-            if (!GS.AffectSingleLocations && pmt.Items.Count <= 1)
-            {
-                return false;
-            }
-
-            if (!GS.ForceReplaceECLs
-                && pmt is ExistingContainerPlacement epmt 
-                && currentContainer == epmt.Location.containerType
-                // If there is an item requesting the current container, it is probably being "replaced"
-                && pmt.Items.All(item => item.GetPreferredContainer() != currentContainer))
-            {
-                // Not replaced
-                return false;
+                // Requesting the container did not choose the one we wanted, so it is probably not available for this location.
+                return originalChoice;
             }
 
             switch (GS.ReplacementSelectorOption)
             {
-                case GlobalSettings.ReplacementSelectorOptions.NoRequestedContainer:
-                    return pmt.Items.All(item => item.GetPreferredContainer() == null || item.GetPreferredContainer() == Container.Unknown);
-
                 case GlobalSettings.ReplacementSelectorOptions.AnyGiveLate:
-                    return pmt.Items.Any(item => !item.GiveEarly(currentContainer));
-
+                    if (items.Any(item => !item.GiveEarly(originalChoice)))
+                    {
+                        return newChoice;
+                    }
+                    else
+                    {
+                        return originalChoice;
+                    }
                 case GlobalSettings.ReplacementSelectorOptions.AnyContainerLocation:
-                    return true;
-
-
-                default:
-                    return false;
+                    return newChoice;
+                case GlobalSettings.ReplacementSelectorOptions.NoRequestedContainer:
+                    if (items.All(item => item.GetPreferredContainer() != originalChoice))
+                    {
+                        return newChoice;
+                    }
+                    else
+                    {
+                        return originalChoice;
+                    }
             }
+
+            _logger.LogWarn($"Unhandled placement at {loc.name}");
+            return originalChoice;
         }
     }
 }

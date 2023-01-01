@@ -48,7 +48,7 @@ namespace ContainerConfig
                     n => GS.ReplacementSelectorOption = (GlobalSettings.ReplacementSelectorOptions)n,
                     () => (int)GS.ReplacementSelectorOption
                     ),
-                new TextPanel("Changes made here will only apply to new save files"),
+                new TextPanel("Changes made here may not apply to existing save files"),
             });
 
             return MenuRef.GetMenuScreen(modListMenu);

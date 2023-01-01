@@ -35,10 +35,5 @@ namespace ContainerConfig
         /// Used to decide whether to replace.
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))] public ReplacementSelectorOptions ReplacementSelectorOption;
-
-        /// <summary>
-        /// If false, will not replace ECLs unless they are already replaced.
-        /// </summary>
-        public bool ForceReplaceECLs = true;
     }
 }

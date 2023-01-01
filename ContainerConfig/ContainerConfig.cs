@@ -1,10 +1,6 @@
 using Satchel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Modding;
-using UnityEngine;
 
 namespace ContainerConfig
 {
@@ -45,7 +41,7 @@ namespace ContainerConfig
         {
             Log("Initializing Mod...");
 
-            ItemChanger.Events.BeforeStartNewGame += PlacementPatcher.ConfigurePlacements;
+            PlacementPatcher.Hook();
         }
     }
 }

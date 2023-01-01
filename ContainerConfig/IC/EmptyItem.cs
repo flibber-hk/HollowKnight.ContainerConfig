@@ -44,6 +44,8 @@ namespace ContainerConfig.IC
     /// </summary>
     public class EmptyItem : AbstractItem
     {
+        private EmptyItem() { }
+
         public string PreferredContainer { get; set; }
 
         public override void GiveImmediate(GiveInfo info) { }
