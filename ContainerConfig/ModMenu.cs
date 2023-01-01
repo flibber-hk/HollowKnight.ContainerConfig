@@ -11,11 +11,6 @@ namespace ContainerConfig
 {
     public static class ModMenu
     {
-        // TODO
-        // - Colour Apply button when there are unsaved changes
-        // - Preset selector
-        // - Possibly add more container types?
-
         private static GlobalSettings GS => ContainerConfigMod.GS;
 
         public static event Action RecalculateClicked;
@@ -27,6 +22,7 @@ namespace ContainerConfig
             "No Change",
             "Shiny",
             "Mimic",
+            "Grub",
         };
         private static readonly string[] ReplaceOptions = new[]
         {
@@ -74,7 +70,7 @@ namespace ContainerConfig
                         {
                             ShowCustomizationElements();
                         }
-                        SetApplyColor(Color.red);
+                        SetApplyColor(Color.yellow);
                     },
                     () =>
                     {
@@ -97,7 +93,7 @@ namespace ContainerConfig
                     n => 
                     { 
                         GS.DefaultContainerType = ContainerOptions[n] == "No Change" ? Container.Unknown : ContainerOptions[n]; 
-                        SetApplyColor(Color.red); 
+                        SetApplyColor(Color.yellow); 
                     },
                     () => ContainerOptions.IndexOf(GS.DefaultContainerType)
                     ),
@@ -108,7 +104,7 @@ namespace ContainerConfig
                     n =>
                     { 
                         GS.AffectSingleLocations = n == 1;
-                        SetApplyColor(Color.red);
+                        SetApplyColor(Color.yellow);
                     },
                     () => GS.AffectSingleLocations ? 1 : 0
                     ),
@@ -119,7 +115,7 @@ namespace ContainerConfig
                     n =>
                     {
                         GS.ReplacementSelectorOption = (GlobalSettings.ReplacementSelectorOptions)n;
-                        SetApplyColor(Color.red);
+                        SetApplyColor(Color.yellow);
                     },
                     () => (int)GS.ReplacementSelectorOption
                     ),
