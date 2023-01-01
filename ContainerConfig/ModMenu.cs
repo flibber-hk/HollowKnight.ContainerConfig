@@ -6,6 +6,11 @@ namespace ContainerConfig
 {
     public static class ModMenu
     {
+        // TODO
+        // - Colour Apply button when there are unsaved changes
+        // - Preset selector
+        // - Possibly add more container types?
+
         private static GlobalSettings GS => ContainerConfigMod.GS;
 
         public static event Action RecalculateClicked;
