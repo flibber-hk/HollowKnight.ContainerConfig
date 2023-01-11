@@ -24,9 +24,9 @@ namespace ContainerConfig
         private static readonly string[] ContainerOptions = new[]
         {
             "No Change",
-            "Shiny",
-            "Mimic",
-            "Grub",
+            Container.Shiny,
+            Container.Mimic,
+            Container.GrubJar,
         };
         private static readonly string[] ReplaceOptions = new[]
         {
@@ -52,6 +52,13 @@ namespace ContainerConfig
             MenuRef.Find("Preferred Container").Show();
             MenuRef.Find("Replace Single Locations").Show();
             MenuRef.Find("Replacement").Show();
+        }
+
+        private static int GetContainerIndex(string container)
+        {
+            int index = Array.IndexOf(ContainerOptions, container);
+            if (index == -1) index = 0;
+            return index;
         }
 
         internal static MenuScreen GetMenuScreen(MenuScreen modListMenu)
@@ -98,7 +105,7 @@ namespace ContainerConfig
                         GS = GS with { DefaultContainerType = ContainerOptions[n] == "No Change" ? Container.Unknown : ContainerOptions[n] };
                         SetApplyColor(Color.yellow); 
                     },
-                    () => ContainerOptions.IndexOf(GS.DefaultContainerType)
+                    () => GetContainerIndex(GS.DefaultContainerType)
                     ),
                 new HorizontalOption(
                     "Replace Single Locations",
