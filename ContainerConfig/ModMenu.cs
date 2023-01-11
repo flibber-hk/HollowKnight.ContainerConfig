@@ -11,7 +11,11 @@ namespace ContainerConfig
 {
     public static class ModMenu
     {
-        private static GlobalSettings GS => ContainerConfigMod.GS;
+        private static GlobalSettings GS
+        {
+            get => ContainerConfigMod.GS;
+            set => ContainerConfigMod.GS = value;
+        }
 
         public static event Action RecalculateClicked;
 
@@ -90,8 +94,8 @@ namespace ContainerConfig
                     "Which container type to place at locations",
                     ContainerOptions,
                     n => 
-                    { 
-                        GS.DefaultContainerType = ContainerOptions[n] == "No Change" ? Container.Unknown : ContainerOptions[n]; 
+                    {
+                        GS = GS with { DefaultContainerType = ContainerOptions[n] == "No Change" ? Container.Unknown : ContainerOptions[n] };
                         SetApplyColor(Color.yellow); 
                     },
                     () => ContainerOptions.IndexOf(GS.DefaultContainerType)
@@ -102,7 +106,7 @@ namespace ContainerConfig
                     new[]{ "False", "True" },
                     n =>
                     { 
-                        GS.AffectSingleLocations = n == 1;
+                        GS = GS with { AffectSingleLocations = n == 1 };
                         SetApplyColor(Color.yellow);
                     },
                     () => GS.AffectSingleLocations ? 1 : 0
@@ -113,7 +117,7 @@ namespace ContainerConfig
                     ReplaceOptions,
                     n =>
                     {
-                        GS.ReplacementSelectorOption = (GlobalSettings.ReplacementSelectorOptions)n;
+                        GS = GS with { ReplacementSelectorOption = (GlobalSettings.ReplacementSelectorOptions)n };
                         SetApplyColor(Color.yellow);
                     },
                     () => (int)GS.ReplacementSelectorOption

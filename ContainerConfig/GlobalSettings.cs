@@ -8,12 +8,12 @@ namespace ContainerConfig
         /// <summary>
         /// Force locations to have this container where possible.
         /// </summary>
-        public string DefaultContainerType { get; set; } = ItemChanger.Container.Unknown;
+        public string DefaultContainerType { get; init; } = ItemChanger.Container.Unknown;
 
         /// <summary>
         /// If false, only apply to locations with more than one item.
         /// </summary>
-        public bool AffectSingleLocations { get; set; } = false;
+        public bool AffectSingleLocations { get; init; } = false;
 
         public enum ReplacementSelectorOptions
         {
@@ -34,6 +34,6 @@ namespace ContainerConfig
         /// <summary>
         /// Used to decide whether to replace.
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))] public ReplacementSelectorOptions ReplacementSelectorOption { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))] public ReplacementSelectorOptions ReplacementSelectorOption { get; init; }
     }
 }
