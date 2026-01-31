@@ -38,12 +38,12 @@ jobs:
         run: dotnet build -c Release
 
       - name: Prepare artifacts for release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: ContainerConfig
           path: ContainerConfig/bin/Publish/ContainerConfig/zip
       - name: Upload metadata
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: metadata
           path: ContainerConfig/bin/Publish/ContainerConfig/metadata
